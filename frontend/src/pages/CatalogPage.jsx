@@ -13,7 +13,17 @@ import {
   Filter,
   Sparkles,
   Zap,
+  Tag,
+  ShieldCheck,
 } from 'lucide-react';
+
+const CATEGORIES = [
+  { id: 'all', label: 'All Sessions' },
+  { id: 'concurrency', label: '⚡ Concurrency & DB' },
+  { id: 'fullstack', label: '🎨 React & Full-Stack' },
+  { id: 'ai', label: '🤖 AI Agents & LLMs' },
+  { id: 'available', label: '🎟️ Available Seats' },
+];
 
 export const CatalogPage = ({ onSelectSession, onNavigate }) => {
   const { user, isAuthenticated, openAuthModal } = useAuth();
@@ -22,6 +32,7 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [upcomingOnly, setUpcomingOnly] = useState(true);
   const [bookingInProgressId, setBookingInProgressId] = useState(null);
 
@@ -79,6 +90,34 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
     }
   };
 
+  // Client-side category filtering
+  const filteredSessions = sessions.filter((s) => {
+    if (selectedCategory === 'all') return true;
+    if (selectedCategory === 'available') return s.remaining_seats > 0;
+    if (selectedCategory === 'concurrency') {
+      return (
+        s.title.toLowerCase().includes('concurrency') ||
+        s.title.toLowerCase().includes('locking') ||
+        s.description.toLowerCase().includes('locking')
+      );
+    }
+    if (selectedCategory === 'fullstack') {
+      return (
+        s.title.toLowerCase().includes('react') ||
+        s.title.toLowerCase().includes('full-stack') ||
+        s.description.toLowerCase().includes('django')
+      );
+    }
+    if (selectedCategory === 'ai') {
+      return (
+        s.title.toLowerCase().includes('agent') ||
+        s.title.toLowerCase().includes('llm') ||
+        s.description.toLowerCase().includes('ai')
+      );
+    }
+    return true;
+  });
+
   const formatDate = (isoStr) => {
     const d = new Date(isoStr);
     return d.toLocaleDateString(undefined, {
@@ -104,13 +143,13 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
       <section className="catalog-hero">
         <div className="hero-badge">
           <Sparkles size={14} className="text-amber-400" />
-          <span>High-Performance Sessions Marketplace</span>
+          <span>Real-Time Seat Inventory & Booking Engine</span>
         </div>
         <h1 className="hero-title">
-          Explore Live Workshops & <span className="text-gradient">Reserve Real-Time Seats</span>
+          Explore Live Sessions & <span className="text-gradient">Reserve Real-Time Seats</span>
         </h1>
         <p className="hero-subtitle">
-          Engineered with strict PostgreSQL row-level locks to eliminate oversubscription and race conditions.
+          Built with transactional PostgreSQL row-level locks (<code className="code-pill">SELECT FOR UPDATE</code>) guaranteeing zero oversubscription under high concurrent demand.
         </p>
 
         {/* Search & Filter Bar */}
@@ -120,7 +159,7 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
             <input
               type="text"
               className="search-input"
-              placeholder="Search by session title, topic, or creator..."
+              placeholder="Search by topic, keyword, or creator name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -139,6 +178,19 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
             </label>
           </div>
         </div>
+
+        {/* Category Chips */}
+        <div className="category-chips-row">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              className={`category-chip ${selectedCategory === cat.id ? 'category-chip-active' : ''}`}
+              onClick={() => setSelectedCategory(cat.id)}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Catalog Grid */}
@@ -146,17 +198,26 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
         {loading ? (
           <div className="loading-state">
             <div className="spinner" />
-            <p>Loading live sessions from catalog...</p>
+            <p>Loading live sessions from marketplace...</p>
           </div>
-        ) : sessions.length === 0 ? (
+        ) : filteredSessions.length === 0 ? (
           <div className="empty-state-card">
             <AlertTriangle size={36} className="text-amber-400 mb-2" />
             <h3>No Sessions Found</h3>
-            <p>Try clearing your search query or toggling the "Upcoming Only" filter.</p>
+            <p>Try switching category filters or clearing your search keywords.</p>
+            <button
+              className="btn btn-secondary btn-sm mt-3"
+              onClick={() => {
+                setSelectedCategory('all');
+                setSearchQuery('');
+              }}
+            >
+              Reset Filters
+            </button>
           </div>
         ) : (
           <div className="sessions-grid">
-            {sessions.map((session) => {
+            {filteredSessions.map((session) => {
               const isOwner = user?.id === session.creator?.id;
               const isBooked = session.user_has_booked;
               const isFull = session.is_sold_out;
@@ -193,7 +254,9 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
                             ? `${session.creator.first_name} ${session.creator.last_name || ''}`
                             : session.creator?.email}
                         </span>
-                        <span className="creator-role-tag">Creator</span>
+                        <span className="creator-role-tag">
+                          <ShieldCheck size={11} className="inline mr-0.5" /> Host
+                        </span>
                       </div>
                     </div>
 
@@ -229,7 +292,7 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
                           ? 'Session Ended'
                           : isFull
                           ? 'Sold Out'
-                          : `${remaining} / ${capacity} seats left`}
+                          : `${remaining} of ${capacity} seats remaining`}
                       </span>
                     </div>
                     <div className="capacity-progress-track">
@@ -249,19 +312,20 @@ export const CatalogPage = ({ onSelectSession, onNavigate }) => {
                         onSelectSession(session.id);
                       }}
                     >
-                      <span>View Details</span>
+                      <span>View Full Details</span>
                       <ArrowRight size={14} />
                     </button>
 
                     {isOwner ? (
-                      <span className="badge badge-owner">Your Session</span>
+                      <span className="badge badge-owner">Your Offering</span>
                     ) : isBooked ? (
                       <button
                         className="btn btn-booked btn-sm"
                         onClick={(e) => handleQuickBook(e, session)}
+                        title="You already have a confirmed seat in this session"
                       >
                         <CheckCircle2 size={14} />
-                        <span>Booked</span>
+                        <span>Booked (View)</span>
                       </button>
                     ) : hasStarted ? (
                       <button className="btn btn-disabled btn-sm" disabled>

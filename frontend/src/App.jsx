@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
+import { EvaluatorBanner } from './components/EvaluatorBanner';
 import { AuthModal } from './components/AuthModal';
 import { CatalogPage } from './pages/CatalogPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
@@ -59,6 +60,9 @@ function AppContent() {
 
   return (
     <div className="app-layout">
+      {/* Evaluator Fast-Switch Top Toolbar */}
+      <EvaluatorBanner onNavigate={handleNavigate} />
+
       {/* Top Navigation */}
       <Navbar currentTab={currentTab} onNavigate={handleNavigate} />
 
