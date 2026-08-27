@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Container with Data Persistence
+  db:
+    image: postgres:16-alpine
+    container_name: ahoum_postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-marketplace_db}
+      POSTGRES_USER: ${DB_USER:-marketplace_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-marketplace_secret_2026}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-marketplace_user} -d ${DB_NAME:-marketplace_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ahoum_network
+
+  # 2. Django + DRF Backend Container
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ahoum_backend_api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-ahoum-marketplace-production-grade-key-2026-xyz!}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_ALLOWED_HOSTS=*
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-marketplace_db}
+      - DB_USER=${DB_USER:-marketplace_user}
+      - DB_PASSWORD=${DB_PASSWORD:-marketplace_secret_2026}
+      - JWT_ACCESS_TOKEN_MINUTES=${JWT_ACCESS_TOKEN_MINUTES:-60}
+      - JWT_REFRESH_TOKEN_DAYS=${JWT_REFRESH_TOKEN_DAYS:-7}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+    networks:
+      - ahoum_network
+
+  # 3. React + Vite Frontend Container
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ahoum_frontend_app
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - ahoum_network
+
+  # 4. Nginx Reverse Proxy Container
+  proxy:
+    image: nginx:alpine
+    container_name: ahoum_reverse_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - ahoum_network
+
+volumes:
+  postgres_data:
+    name: ahoum_marketplace_postgres_data
+
+networks:
+  ahoum_network:
+    name: ahoum_marketplace_network
+    driver: bridge
