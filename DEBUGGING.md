@@ -48,4 +48,34 @@ The initial frontend authentication modal imported the `Github` icon directly fr
 
 ### Verification
 - Executed `npm run build` in `frontend/`.
-- Build succeeded in **3.77s**, generating clean, minified production assets in `frontend/dist/` (`dist/assets/index-*.js`, `dist/assets/index-*.css`) with zero bundle errors.
+- Build succeeded in **4.67s**, generating clean, minified production assets in `frontend/dist/` (`dist/assets/index-*.js`, `dist/assets/index-*.css`) with zero bundle errors.
+
+---
+
+## Issue 3: In-Memory SQLite Test Isolation in Multi-Threaded `TransactionTestCase`
+
+### Symptom
+Running `python backend/manage.py test sessions_app.tests` caused `test_single_seat_race_condition_never_oversubscribes` to fail with:
+```text
+AssertionError: 0 != 1 : Expected exactly 1 successful booking, but got 0
+```
+
+### Diagnosis & Root Cause
+By default, Django creates an in-memory SQLite database (`:memory:`) during automated tests. In SQLite, `:memory:` databases are strictly private to individual database connection handles. When worker threads in `ThreadPoolExecutor` closed their inherited connection and opened a fresh one (`connection.close()`), they connected to an empty, isolated in-memory instance where the test session row created in `setUp()` did not exist.
+
+### Fix
+Configured a file-based test database in `marketplace_core/settings.py`:
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {'timeout': 30},
+        'TEST': {'NAME': BASE_DIR / 'test_db.sqlite3'}
+    }
+}
+```
+This ensures all concurrent test threads open connections to the same unified database file while preserving full `TransactionTestCase` commit semantics.
+
+### Verification
+- Executed `python backend/manage.py test sessions_app.tests users` -> **9/9 tests passed in 1.11s**.

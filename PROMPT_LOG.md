@@ -44,3 +44,9 @@ This log documents all material AI interactions, tool usages, engineering decisi
 - **What AI Initially Generated**: Imported `Github` from `lucide-react` in `AuthModal.jsx`.
 - **Why It Was Flawed**: Recent versions of `lucide-react` do not export brand-specific icons, causing Vite's Rollup build step to fail with a missing export error.
 - **How It Was Corrected**: Removed the invalid package import and replaced it with a self-contained inline SVG for GitHub and Google, eliminating fragile external dependencies while preserving clean visuals.
+
+### Concrete Example 3: Client-Side Seat Capacity Verification
+- **What AI Initially Suggested**: AI initially proposed relying on client-side button disabling based on `session.remaining_seats > 0` before sending a standard `POST /sessions/:id/book`.
+- **Why It Was Flawed / Rejected**: Client-side state is inherently stale in multi-user concurrent environments, and direct API callers (via `curl` or concurrent scripts) bypass UI controls entirely, leading to overbooking and data corruption.
+- **How It Was Corrected**: Enforced strict pessimistic row-level locking (`select_for_update()`) inside an atomic transaction on the backend, alongside a partial database `UniqueConstraint` on active bookings.
+

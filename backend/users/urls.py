@@ -15,4 +15,5 @@ urlpatterns = [
     path('config/', OAuthConfigView.as_view(), name='auth_config'),
     path('profile/', UserProfileView.as_view(), name='user_profile'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('refresh/', TokenRefreshView.as_view(), name='token_refresh_alias'),
 ]

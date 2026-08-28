@@ -46,8 +46,11 @@ def serve_react(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', health_check, name='health_check'),
+    path('health/', health_check, name='direct_health_check'),
     path('api/auth/', include('users.urls')),
+    path('auth/', include('users.urls')),
     path('api/', include('sessions_app.urls')),
+    path('', include('sessions_app.urls')),
 ]
 
 # Serve assets folder from frontend/dist/assets directly in development

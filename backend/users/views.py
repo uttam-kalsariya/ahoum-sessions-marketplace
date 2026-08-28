@@ -40,7 +40,7 @@ class UserProfileView(views.APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(UserSerializer(request.user).data)
-        return Response(serializer.errors, status=status.status.HTTP_400_BAD_REQUEST if hasattr(status, 'status') else status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GoogleAuthView(views.APIView):

@@ -7,5 +7,7 @@ router.register(r'sessions', SessionViewSet, basename='session')
 router.register(r'bookings', BookingViewSet, basename='booking')
 
 urlpatterns = [
+    path('my-bookings/', BookingViewSet.as_view({'get': 'my_bookings'}), name='direct_my_bookings'),
+    path('creator/dashboard/', SessionViewSet.as_view({'get': 'my_sessions'}), name='direct_creator_dashboard'),
     path('', include(router.urls)),
 ]
