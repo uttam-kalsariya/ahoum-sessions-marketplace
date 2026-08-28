@@ -150,6 +150,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
+    'EXCEPTION_HANDLER': 'marketplace_core.exceptions.custom_exception_handler',
 }
 
 # Simple JWT Configuration
