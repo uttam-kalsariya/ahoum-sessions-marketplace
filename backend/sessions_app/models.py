@@ -52,6 +52,18 @@ class Session(models.Model):
         return self.bookings.filter(status=BookingStatus.CONFIRMED).count()
 
     @property
+    def booking_count(self) -> int:
+        return self.confirmed_bookings_count
+
+    @property
+    def duration(self) -> int:
+        """Duration in minutes."""
+        if self.end_time and self.start_time:
+            diff = (self.end_time - self.start_time).total_seconds() / 60
+            return max(1, int(diff))
+        return 60
+
+    @property
     def remaining_seats(self) -> int:
         return max(0, self.capacity - self.confirmed_bookings_count)
 
@@ -62,6 +74,7 @@ class Session(models.Model):
     @property
     def has_started(self) -> bool:
         return self.start_time <= timezone.now()
+
 
 
 class Booking(models.Model):

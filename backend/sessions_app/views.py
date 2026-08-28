@@ -126,3 +126,24 @@ class BookingViewSet(viewsets.GenericViewSet):
             BookingSerializer(booking, context={'request': request}).data,
             status=status.HTTP_200_OK
         )
+
+
+class CreatorDashboardView(viewsets.ViewSet):
+    """
+    Dedicated Creator Dashboard endpoint returning aggregate stats and session details.
+    """
+    permission_classes = [permissions.IsAuthenticated, IsCreator]
+
+    def list(self, request):
+        sessions = Session.objects.filter(
+            creator=request.user
+        ).select_related('creator').prefetch_related('bookings', 'bookings__user').order_by('-created_at')
+
+        serializer = SessionDetailSerializer(sessions, many=True, context={'request': request})
+        total_bookings = sum(s.confirmed_bookings_count for s in sessions)
+        return Response({
+            'total_sessions': sessions.count(),
+            'total_bookings': total_bookings,
+            'sessions': serializer.data,
+        })
+

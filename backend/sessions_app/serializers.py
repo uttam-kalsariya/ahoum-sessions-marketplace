@@ -1,3 +1,4 @@
+from datetime import timedelta
 from rest_framework import serializers
 from django.utils import timezone
 from users.serializers import UserSerializer
@@ -6,6 +7,9 @@ from .models import Session, Booking, SessionStatus, BookingStatus
 
 class SessionListSerializer(serializers.ModelSerializer):
     creator = UserSerializer(read_only=True)
+    creator_name = serializers.CharField(source='creator.full_name', read_only=True)
+    duration = serializers.IntegerField(read_only=True)
+    booking_count = serializers.IntegerField(source='confirmed_bookings_count', read_only=True)
     confirmed_bookings_count = serializers.IntegerField(read_only=True)
     remaining_seats = serializers.IntegerField(read_only=True)
     is_sold_out = serializers.BooleanField(read_only=True)
@@ -19,11 +23,14 @@ class SessionListSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'creator',
+            'creator_name',
             'start_time',
             'end_time',
+            'duration',
             'capacity',
             'price',
             'status',
+            'booking_count',
             'confirmed_bookings_count',
             'remaining_seats',
             'is_sold_out',
@@ -66,6 +73,9 @@ class AttendeeSerializer(serializers.ModelSerializer):
 
 class SessionDetailSerializer(serializers.ModelSerializer):
     creator = UserSerializer(read_only=True)
+    creator_name = serializers.CharField(source='creator.full_name', read_only=True)
+    duration = serializers.IntegerField(read_only=True)
+    booking_count = serializers.IntegerField(source='confirmed_bookings_count', read_only=True)
     confirmed_bookings_count = serializers.IntegerField(read_only=True)
     remaining_seats = serializers.IntegerField(read_only=True)
     is_sold_out = serializers.BooleanField(read_only=True)
@@ -81,11 +91,14 @@ class SessionDetailSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'creator',
+            'creator_name',
             'start_time',
             'end_time',
+            'duration',
             'capacity',
             'price',
             'status',
+            'booking_count',
             'confirmed_bookings_count',
             'remaining_seats',
             'is_sold_out',
@@ -120,6 +133,8 @@ class SessionDetailSerializer(serializers.ModelSerializer):
 
 
 class SessionCreateUpdateSerializer(serializers.ModelSerializer):
+    duration = serializers.IntegerField(required=False, write_only=True, min_value=1)
+
     class Meta:
         model = Session
         fields = [
@@ -128,6 +143,7 @@ class SessionCreateUpdateSerializer(serializers.ModelSerializer):
             'description',
             'start_time',
             'end_time',
+            'duration',
             'capacity',
             'price',
             'status',
@@ -148,7 +164,12 @@ class SessionCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         start_time = attrs.get('start_time') or (self.instance.start_time if self.instance else None)
+        duration = attrs.pop('duration', None)
         end_time = attrs.get('end_time') or (self.instance.end_time if self.instance else None)
+
+        if duration and not attrs.get('end_time') and start_time:
+            attrs['end_time'] = start_time + timedelta(minutes=duration)
+            end_time = attrs['end_time']
 
         if start_time and end_time and end_time <= start_time:
             raise serializers.ValidationError({"end_time": "End time must be strictly after start time."})
@@ -158,3 +179,8 @@ class SessionCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"start_time": "Start time must be in the future."})
 
         return attrs
+
+
+# Alias
+SessionSerializer = SessionDetailSerializer
+
