@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-import { User, ShieldCheck, UserCheck, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { User, ShieldCheck, UserCheck, Check } from 'lucide-react';
 
 export const ProfilePage = ({ onNavigate }) => {
   const { user, isAuthenticated, updateProfile, openAuthModal } = useAuth();
-  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     first_name: '',

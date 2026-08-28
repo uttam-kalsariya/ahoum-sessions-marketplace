@@ -6,8 +6,6 @@ import {
   CalendarCheck2,
   Calendar,
   Clock,
-  DollarSign,
-  AlertCircle,
   CheckCircle2,
   XCircle,
   ArrowRight,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, UserCheck, Zap, LogOut, Sparkles } from 'lucide-react';
+import { ShieldCheck, UserCheck, LogOut, Sparkles } from 'lucide-react';
 
 export const EvaluatorBanner = ({ onNavigate }) => {
   const { user, isAuthenticated, isCreator, loginWithDemo, logout } = useAuth();

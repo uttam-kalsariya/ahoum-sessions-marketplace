@@ -13,7 +13,6 @@ import {
   Filter,
   Sparkles,
   Zap,
-  Tag,
   ShieldCheck,
 } from 'lucide-react';
 

@@ -9,11 +9,7 @@ import {
   Edit2,
   Trash2,
   Users,
-  Calendar,
-  Clock,
-  DollarSign,
   AlertCircle,
-  Eye,
   X,
   Sparkles,
 } from 'lucide-react';

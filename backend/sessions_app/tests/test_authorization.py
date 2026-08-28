@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.models import UserRole
-from sessions_app.models import Session, Booking, SessionStatus, BookingStatus
+from sessions_app.models import Session, SessionStatus
 
 User = get_user_model()
 

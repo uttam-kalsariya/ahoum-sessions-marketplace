@@ -14,7 +14,7 @@ import { ShieldCheck } from 'lucide-react';
 function AppContent() {
   const [currentTab, setCurrentTab] = useState('catalog'); // 'catalog' | 'detail' | 'creator' | 'my-bookings' | 'profile'
   const [selectedSessionId, setSelectedSessionId] = useState(null);
-  const { user, isCreator, loginWithGitHub, loginWithGoogle } = useAuth();
+  const { loginWithGitHub, loginWithGoogle } = useAuth();
   const { showToast } = useToast();
 
   // Handle OAuth Callback Redirect params if present in URL

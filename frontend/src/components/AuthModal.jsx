@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../api/client';
 import {
   X,
   Sparkles,
@@ -25,7 +24,6 @@ export const AuthModal = () => {
   const [activeTab, setActiveTab] = useState('demo'); // 'demo' | 'google' | 'github'
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
-  const [oauthConfig, setOAuthConfig] = useState({ has_google: false, has_github: false });
 
   // Custom demo input
   const [customEmail, setCustomEmail] = useState('');
@@ -39,11 +37,6 @@ export const AuthModal = () => {
     if (isAuthModalOpen) {
       setSelectedRole(authModalInitialRole || 'USER');
       setAuthError(null);
-
-      // Fetch OAuth configuration from backend
-      api.get('/auth/config/')
-        .then((config) => setOAuthConfig(config))
-        .catch(() => {});
     }
   }, [isAuthModalOpen, authModalInitialRole]);
 

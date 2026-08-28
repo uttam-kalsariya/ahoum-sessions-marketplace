@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from users.permissions import IsCreator, IsSessionOwner
-from .models import Session, Booking, SessionStatus, BookingStatus
+from .models import Session, Booking, SessionStatus
 from .serializers import (
     SessionListSerializer,
     SessionDetailSerializer,
