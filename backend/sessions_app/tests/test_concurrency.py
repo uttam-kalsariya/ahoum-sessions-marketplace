@@ -156,3 +156,49 @@ class ConcurrencyBookingTestCase(TransactionTestCase):
             status=BookingStatus.CONFIRMED
         ).count()
         self.assertEqual(user_bookings_in_db, 1)
+
+    def test_thread_a_thread_b_capacity_1_race_condition(self):
+        """
+        Explicit two-thread concurrency test (Thread A vs Thread B on 1-seat capacity):
+        - Thread A and Thread B simultaneously attempt to book the single seat.
+        - Exactly 1 succeeds, exactly 1 fails.
+        - Final DB booking count is strictly 1.
+        """
+        now = timezone.now()
+        session = Session.objects.create(
+            title="Thread A vs Thread B 1-Seat Session",
+            description="Testing 2-thread simultaneous booking",
+            creator=self.creator,
+            start_time=now + timedelta(hours=3),
+            end_time=now + timedelta(hours=4),
+            capacity=1,
+            price=30.00,
+            status=SessionStatus.ACTIVE
+        )
+
+        user_a = self.users[0]
+        user_b = self.users[1]
+        results = []
+
+        def run_booking(user):
+            connection.close()
+            try:
+                booking = BookingService.create_booking(user=user, session_id=session.id)
+                return {"success": True, "booking": booking}
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+            finally:
+                connection.close()
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [executor.submit(run_booking, user_a), executor.submit(run_booking, user_b)]
+            for future in concurrent.futures.as_completed(futures):
+                results.append(future.result())
+
+        successes = [r for r in results if r["success"]]
+        failures = [r for r in results if not r["success"]]
+
+        self.assertEqual(len(successes), 1, "Expected exactly one thread to succeed.")
+        self.assertEqual(len(failures), 1, "Expected exactly one thread to fail.")
+        self.assertEqual(Booking.objects.filter(session=session, status=BookingStatus.CONFIRMED).count(), 1)
+
