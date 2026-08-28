@@ -42,3 +42,8 @@ class IsSessionOwner(permissions.BasePermission):
         # For Session object: obj.creator
         creator = getattr(obj, 'creator', None)
         return creator == request.user
+
+
+# Alias for compatibility
+IsOwner = IsSessionOwner
+

@@ -7,6 +7,9 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     is_creator = serializers.BooleanField(read_only=True)
+    full_name = serializers.CharField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    avatar = serializers.CharField(source='avatar_url', read_only=True)
 
     class Meta:
         model = User
@@ -14,33 +17,60 @@ class UserSerializer(serializers.ModelSerializer):
             'id',
             'email',
             'username',
+            'full_name',
+            'name',
             'first_name',
             'last_name',
             'role',
             'is_creator',
             'bio',
+            'avatar',
             'avatar_url',
             'oauth_provider',
             'date_joined',
         ]
-        read_only_fields = ['id', 'email', 'oauth_provider', 'date_joined']
+        read_only_fields = ['id', 'email', 'oauth_provider', 'date_joined', 'role', 'is_creator']
 
 
-class UserProfileUpdateSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(read_only=True)
+    avatar = serializers.CharField(source='avatar_url', required=False, allow_blank=True)
+
     class Meta:
         model = User
         fields = [
+            'id',
+            'email',
+            'full_name',
+            'avatar',
+            'role',
+        ]
+        read_only_fields = ['id', 'email', 'role']
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(required=False, allow_blank=True)
+    avatar = serializers.CharField(source='avatar_url', required=False, allow_blank=True)
+
+    class Meta:
+        model = User
+        fields = [
+            'full_name',
             'first_name',
             'last_name',
             'bio',
+            'avatar',
             'avatar_url',
-            'role',
         ]
 
-    def validate_role(self, value):
-        if value not in [UserRole.USER, UserRole.CREATOR]:
-            raise serializers.ValidationError(f"Invalid role. Choices are: {UserRole.values}")
-        return value
+    def update(self, instance, validated_data):
+        full_name = validated_data.pop('full_name', None)
+        if full_name is not None:
+            parts = full_name.strip().split(' ', 1)
+            instance.first_name = parts[0]
+            instance.last_name = parts[1] if len(parts) > 1 else ''
+        return super().update(instance, validated_data)
+
 
 
 class GoogleAuthSerializer(serializers.Serializer):

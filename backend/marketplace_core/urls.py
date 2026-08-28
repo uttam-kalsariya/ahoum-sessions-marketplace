@@ -8,6 +8,8 @@ from django.conf.urls.static import static
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from users.views import UserProfileView
+
 
 
 @api_view(['GET'])
@@ -47,6 +49,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/health/', health_check, name='health_check'),
     path('health/', health_check, name='direct_health_check'),
+    path('api/profile/', UserProfileView.as_view(), name='api_user_profile'),
+    path('profile/', UserProfileView.as_view(), name='direct_user_profile'),
     path('api/auth/', include('users.urls')),
     path('auth/', include('users.urls')),
     path('api/', include('sessions_app.urls')),

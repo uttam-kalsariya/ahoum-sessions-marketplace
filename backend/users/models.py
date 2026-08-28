@@ -32,5 +32,18 @@ class User(AbstractUser):
     def is_creator(self) -> bool:
         return self.role == UserRole.CREATOR
 
+    @property
+    def full_name(self) -> str:
+        name = f"{self.first_name} {self.last_name}".strip()
+        return name if name else (self.username or self.email.split('@')[0])
+
+    @property
+    def name(self) -> str:
+        return self.full_name
+
+    @property
+    def avatar(self) -> str:
+        return self.avatar_url
+
     def __str__(self):
         return f"{self.email} ({self.role})"
