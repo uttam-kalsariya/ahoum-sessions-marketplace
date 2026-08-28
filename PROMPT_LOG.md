@@ -4,7 +4,19 @@ This log documents all material AI interactions, tool usages, engineering decisi
 
 ---
 
-## Material AI Prompts & Workflow Log
+## AI Prompt Tracking Table
+
+| Tool | Prompt / Objective | Used | Modified / Supervised | Verified |
+| :--- | :--- | :--- | :--- | :--- |
+| Antigravity (Gemini 3.7) | Generate Custom User model & SimpleJWT setup | Yes | Added role choices (`USER`, `CREATOR`), demo evaluator sign-in, and `USERNAME_FIELD = "email"` | Verified with `/api/auth/demo/` and profile test cases |
+| Antigravity (Gemini 3.7) | Booking transaction logic & concurrency locking | Yes | Reworked naive count check to strict `select_for_update()` inside `transaction.atomic()` with partial `UniqueConstraint` | Passed 10-thread and 2-thread concurrent race condition tests |
+| Antigravity (Gemini 3.7) | Session CRUD & Creator dashboard views | Yes | Enforced `IsCreator` and `IsSessionOwner` object-level permissions | Passed authorization test suite (`403 Forbidden` checks) |
+| Antigravity (Gemini 3.7) | Frontend Axios client & token auto-refresh | Yes | Implemented automatic 401 refresh retry loop and custom events | Tested in browser and end-to-end integration suite |
+
+---
+
+## Detailed Prompt History & Engineering Notes
+
 
 ### Prompt 1: Initial Architecture & Requirement Analysis
 - **Tool / Model**: Antigravity IDE / Gemini 3.7 Flash

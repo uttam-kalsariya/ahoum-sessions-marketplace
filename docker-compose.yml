@@ -61,8 +61,8 @@ services:
       - ahoum_network
 
   # 4. Nginx Reverse Proxy Container
-  proxy:
-    image: nginx:alpine
+  nginx:
+    build: ./nginx
     container_name: ahoum_reverse_proxy
     restart: unless-stopped
     ports:
